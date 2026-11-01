@@ -246,8 +246,14 @@ int APS5_VABI pthread_get_user_context_np_nid_postfix(void) {
     return 0;
 }
 
-int APS5_VABI pthread_getstack_np_nid_postfix(void) {
-    NotImplemented_nid_no_patch(__func__);
+int APS5_VABI pthread_getstack_np_nid_postfix(Pthread thread, void** stack_addr, std::size_t* stack_size) {
+    constexpr int GuestEinval = 22;
+    constexpr int GuestEsrch = 3;
+    if (!thread || !stack_addr || !stack_size) return GuestEinval;
+    const auto live = LockLiveGuestThread(thread);
+    if (!live.owns_lock()) return GuestEsrch;
+    *stack_addr = thread->stackAddress;
+    *stack_size = thread->stackSize;
     return 0;
 }
 

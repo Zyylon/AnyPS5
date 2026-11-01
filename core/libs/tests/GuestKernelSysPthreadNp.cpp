@@ -122,12 +122,44 @@ void TestRwlockattr() {
     });
 }
 
+void* APS5_VABI ChildEntry(void*) {
+    return nullptr;
+}
+
+void TestStack() {
+    Case("pthread_getstack_np", [] {
+        void* addr = nullptr;
+        std::size_t size = 0;
+        Pthread self = scePthreadSelf();
+        if (pthread_getstack_np_nid_postfix(nullptr, &addr, &size) != GUEST_EINVAL) return false;
+        if (pthread_getstack_np_nid_postfix(self, nullptr, &size) != GUEST_EINVAL) return false;
+        if (pthread_getstack_np_nid_postfix(self, &addr, nullptr) != GUEST_EINVAL) return false;
+        auto fakeThread = reinterpret_cast<Pthread>(reinterpret_cast<std::uintptr_t>(&addr) ^ 0xdeadbeefu);
+        if (pthread_getstack_np_nid_postfix(fakeThread, &addr, &size) != 3) return false;
+        if (pthread_getstack_np_nid_postfix(self, &addr, &size) != 0 || addr == nullptr || size == 0) return false;
+        volatile int local = 42;
+        const auto localAddr = reinterpret_cast<std::uintptr_t>(&local);
+        const auto baseAddr = reinterpret_cast<std::uintptr_t>(addr);
+        if (localAddr < baseAddr || localAddr >= baseAddr + size) return false;
+        Pthread child = nullptr;
+        if (scePthreadCreate(&child, nullptr, &ChildEntry, nullptr, "stack_test") != 0 || child == nullptr) return false;
+        void* childAddr = nullptr;
+        std::size_t childSize = 0;
+        if (pthread_getstack_np_nid_postfix(child, &childAddr, &childSize) != 0 || childAddr == nullptr || childSize == 0) return false;
+        void* retval = nullptr;
+        if (scePthreadJoin(child, &retval) != 0) return false;
+        if (pthread_getstack_np_nid_postfix(child, &childAddr, &childSize) != 3) return false;
+        return true;
+    });
+}
+
 }
 
 int main(int argc, char** argv) {
     const std::string_view mode = argc > 1 ? argv[1] : "";
     if (mode == "rwlockattr") TestRwlockattr();
     else if (mode == "kind") TestKind();
+    else if (mode == "stack") TestStack();
     else return 2;
     if (failures == 0) std::printf("all cases passed\n");
     return failures == 0 ? 0 : 1;
