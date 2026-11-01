@@ -37,6 +37,7 @@ void Require(bool condition, const char* message) {
 void CheckConsoleKind(bool ps4) {
     Require(sceKernelIsCEX() == 1, "the console must be reported as a retail unit");
     Require(sceKernelIsDevKit() == 0, "the console must not be reported as a development kit");
+    Require(sceKernelIsCloudDevkit() == 0, "the console must not be reported as a cloud development kit");
     Require(sceKernelIsGenuineCEX() == 1, "the console must be reported as a genuine retail unit");
     Require(sceKernelIsGenuineDevKit() == 0, "the console must not be reported as a genuine development kit");
     Require(sceKernelIsGenuineTestKit() == 0, "the console must not be reported as a genuine test kit");
