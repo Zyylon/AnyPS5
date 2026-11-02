@@ -43,6 +43,7 @@ void CheckConsoleKind(bool ps4) {
     Require(sceKernelIsTestKit() == 0, "the console must not be reported as a test kit");
     Require(sceKernelIsProspero() == 1, "the architecture must be reported as Prospero");
     Require(sceKernelIsKratos() == 0, "the architecture must not be reported as Kratos");
+    Require(sceKernelIsM2DeviceAttached() == 0, "base console configuration does not report an M.2 SSD attached");
     if (ps4) {
         Require(sceKernelIsPs4Process() == 1, "a CUSA title must be reported as a PS4 process");
     } else {
